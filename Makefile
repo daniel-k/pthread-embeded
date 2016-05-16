@@ -14,10 +14,14 @@ ifeq ($V,0)
 	P = > /dev/null
 endif
 
+XRAY_CFLAGS += -finstrument-functions -falign-functions=32 \
+-DXRAY -DXRAY_DISABLE_BROWSER_INTEGRATION -DXRAY_NO_DEMANGLE \
+-DXRAY_ANNOTATE
+
 # other implicit rules
 %.o : %.c
 	@echo [CC] $@
-	$Q$(CC_FOR_TARGET) -c $(CFLAGS_FOR_TARGET) -o $@ $<
+	$Q$(CC_FOR_TARGET) -c $(CFLAGS_FOR_TARGET) $(XRAY_CFLAGS) -o $@ $<
 
 default: all
 
