@@ -39,7 +39,7 @@
 //#define HERMIT_DEBUG(x) printf(x)
 #define HERMIT_DEBUG(...) printf(__VA_ARGS__)
 #else
-#define HERMIT_DEBUG(x)
+#define HERMIT_DEBUG(...)
 #endif
 
 #ifndef TIMER_FREQ
@@ -99,7 +99,7 @@ void NORETURN do_exit(int arg);
 
 static void __reent_init(void)
 {
-	HERMIT_DEBUG("__reent_init()\n");
+//	HERMIT_DEBUG("__reent_init()\n");
   /*
    * prepare newlib to support reentrant calls
    */
@@ -229,6 +229,8 @@ pte_osResult pte_osThreadCreate(pte_osThreadEntryPoint entryPoint,
                                 pte_osThreadHandle* ppte_osThreadHandle)
 {
   hermitThreadData *pThreadData;
+
+  HERMIT_DEBUG("pte_osThreadCreate()\n");
 
   /* Make sure that the stack we're going to allocate is big enough */
   if (stackSize < DEFAULT_STACK_SIZE_BYTES)
@@ -399,6 +401,7 @@ pte_osResult pte_osMutexLock(pte_osMutexHandle handle)
 
 pte_osResult pte_osMutexTimedLock(pte_osMutexHandle handle, unsigned int timeoutMsecs)
 {
+	HERMIT_DEBUG("pte_osMutexTimedLock(handle=%p, ms=%u)\n", handle, timeoutMsecs);
   if (sys_sem_timedwait(handle, timeoutMsecs))
     return PTE_OS_TIMEOUT;
 
@@ -422,14 +425,20 @@ pte_osResult pte_osMutexUnlock(pte_osMutexHandle handle)
 
 pte_osResult pte_osSemaphoreCreate(int initialValue, pte_osSemaphoreHandle *pHandle)
 {
-  if (sys_sem_init((sem_t**) pHandle, initialValue/*, SEM_VALUE_MAX*/))
-    return PTE_OS_NO_RESOURCES;
+
+  if (sys_sem_init((sem_t**) pHandle, initialValue/*, SEM_VALUE_MAX*/)) {
+	HERMIT_DEBUG("create: PTE_OS_NO_RESOURCES\n");
+	  return PTE_OS_NO_RESOURCES;
+  }
+
+//  HERMIT_DEBUG("pte_osSemaphoreCreate(initialValue=%i, pHandle=%p [, handle=%p])\n", initialValue, pHandle, *pHandle);
 
   return PTE_OS_OK;
 }
 
 pte_osResult pte_osSemaphoreDelete(pte_osSemaphoreHandle handle)
 {
+//	HERMIT_DEBUG("pte_osSemaphoreDelete(handle=%p)\n", handle);
   if (sys_sem_destroy(handle))
     return PTE_OS_NO_RESOURCES;
 
@@ -440,6 +449,7 @@ pte_osResult pte_osSemaphorePost(pte_osSemaphoreHandle handle, int count)
 {
   int i;
 
+//  HERMIT_DEBUG("pte_osSemaphorePost(handle=%p, count=%i)\n", handle, count);
   for (i=0; i<count; i++) {
     if (sys_sem_post(handle))
        return PTE_OS_NO_RESOURCES;
@@ -450,6 +460,9 @@ pte_osResult pte_osSemaphorePost(pte_osSemaphoreHandle handle, int count)
 
 pte_osResult pte_osSemaphorePend(pte_osSemaphoreHandle handle, unsigned int *pTimeoutMsecs)
 {
+  unsigned int t = 43;
+	HERMIT_DEBUG("pte_osSemaphorePend(handle=%p, timeout=%u)\n", handle, (pTimeoutMsecs ? *pTimeoutMsecs : t));
+
   if (pTimeoutMsecs && *pTimeoutMsecs) {
     if (sys_sem_timedwait(handle, *pTimeoutMsecs))
       return PTE_OS_TIMEOUT;
@@ -469,6 +482,8 @@ pte_osResult pte_osSemaphoreCancellablePend(pte_osSemaphoreHandle semHandle, uns
 {
   unsigned int msec = 0;
   int ret;
+
+  HERMIT_DEBUG("pte_osSemaphoreCancellablePend()\n");
 
   if (pTimeout)
     msec = *pTimeout;
