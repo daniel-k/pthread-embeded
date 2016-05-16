@@ -36,7 +36,8 @@
 #define MAX_HERMIT_UID		32
 
 #if 1
-#define HERMIT_DEBUG(x) printf(x)
+//#define HERMIT_DEBUG(x) printf(x)
+#define HERMIT_DEBUG(...) printf(__VA_ARGS__)
 #else
 #define HERMIT_DEBUG(x)
 #endif
@@ -98,6 +99,7 @@ void NORETURN do_exit(int arg);
 
 static void __reent_init(void)
 {
+	HERMIT_DEBUG("__reent_init()\n");
   /*
    * prepare newlib to support reentrant calls
    */
@@ -123,6 +125,8 @@ __attribute__((section(".preinit_array"))) typeof(__reent_init) *__pte_preinit =
  */
 static void hermitStubThreadEntry(void *argv)
 {
+	HERMIT_DEBUG("hermitStubThreadEntry()\n");
+
   //int ret;
   hermitThreadData *pThreadData = (hermitThreadData *) argv;
 
@@ -164,6 +168,8 @@ pte_osResult pte_osInit(void)
 {
   pte_osResult result;
   hermitThreadData *pThreadData;
+
+  HERMIT_DEBUG("pte_osInit()\n");
 
   /* Allocate and initialize TLS support */
   result = pteTlsGlobalInit(HERMIT_MAX_TLS);
